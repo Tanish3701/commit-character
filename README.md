@@ -6,7 +6,7 @@ Pure novelty, fully client-side, nothing stored anywhere.
 
 ## Try it
 
-Live demo: `https://<your-username>.github.io/commit-character/`
+Live demo: **[tanish3701.github.io/commit-character](https://tanish3701.github.io/commit-character/)**
 
 Or just download `index.html` and open it in any browser — no build step, no install.
 
@@ -43,7 +43,7 @@ Single self-contained `index.html` — no framework, no build step, no backend.
 No dependencies to install. Just open the file:
 
 ```bash
-git clone https://github.com/<your-username>/commit-character.git
+git clone https://github.com/Tanish3701/commit-character.git
 cd commit-character
 open index.html   # or double-click it, or drag it into a browser tab
 ```
