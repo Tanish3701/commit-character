@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Commit Character</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cinzel+Decorative:wght@700;900&family=Crimson+Pro:ital,wght@0,400;0,500;0,600;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" crossorigin="anonymous">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
+<style>
+  :root{
+    --ink: #14160f;
+    --ink-2: #1c1f15;
+    --parchment: #efe4c8;
+    --parchment-2: #e5d7b3;
+    --parchment-text: #2a2013;
+    --parchment-muted: #6b5a3c;
+    --gold: #c9a227;
+    --gold-bright: #e0bc4e;
+    --blood: #7a2e2e;
+    --blood-bright: #a6413f;
+    --forest: #3a4d38;
+    --font-display: 'Cinzel', serif;
+    --font-deco: 'Cinzel Decorative', serif;
+    --font-body: 'Crimson Pro', serif;
+    --font-mono: 'Space Mono', monospace;
+  }
+  *{ box-sizing: border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    min-height:100vh;
+    background:
+      radial-gradient(ellipse at 20% 0%, rgba(201,162,39,0.06), transparent 55%),
+      radial-gradient(ellipse at 85% 90%, rgba(122,46,46,0.08), transparent 55%),
+      var(--ink);
+    color: var(--parchment);
+    font-family: var(--font-body);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding: 48px 20px 80px;
+  }
+
+  /* ---------- shared bits ---------- */
+  .eyebrow-title{
+    font-family: var(--font-deco);
+    font-size: 15px;
+    letter-spacing: 0.04em;
+    color: var(--gold-bright);
+    margin: 0 0 6px;
+  }
+  .btn{
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--ink);
+    background: linear-gradient(180deg, var(--gold-bright), var(--gold));
+    border: 1px solid #8f7017;
+    border-radius: 3px;
+    padding: 13px 26px;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .btn:hover{ transform: translateY(-1px); box-shadow: 0 4px 14px rgba(201,162,39,0.25); }
+  .btn:active{ transform: translateY(0); }
+  .btn.secondary{
+    background: transparent;
+    color: var(--parchment);
+    border: 1px solid #5c5946;
+  }
+  .btn.secondary:hover{ border-color: var(--gold); color: var(--gold-bright); box-shadow:none; }
+  .btn:disabled{ opacity:0.5; cursor:default; transform:none; box-shadow:none; }
+
+  /* ---------- intro screen ---------- */
+  #intro{
+    max-width: 560px;
+    width:100%;
+    text-align:center;
+    padding-top: 40px;
+  }
+  #intro h1{
+    font-family: var(--font-deco);
+    font-size: clamp(36px, 7vw, 54px);
+    color: var(--parchment);
+    margin: 0 0 14px;
+    line-height:1.1;
+    text-shadow: 0 0 24px rgba(201,162,39,0.18);
+  }
+  #intro p.tag{
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 18px;
+    color: #b8ad8e;
+    margin: 0 0 40px;
+    line-height:1.5;
+  }
+  .rule{
+    width: 120px;
+    height: 1px;
+    margin: 0 auto 40px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+  #intro-form{
+    display:flex;
+    gap:10px;
+    justify-content:center;
+    flex-wrap:wrap;
+  }
+  #username-input{
+    font-family: var(--font-mono);
+    font-size: 16px;
+    background: rgba(239,228,200,0.06);
+    border: 1px solid #5c5946;
+    color: var(--parchment);
+    border-radius: 3px;
+    padding: 13px 16px;
+    width: 260px;
+    outline: none;
+  }
+  #username-input::placeholder{ color: #766c54; }
+  #username-input:focus{ border-color: var(--gold); }
+  #intro-hint{
+    margin-top: 18px;
+    font-size: 13px;
+    color: #776c53;
+    font-family: var(--font-body);
+  }
+
+  /* ---------- loading ---------- */
+  #loading{
+    display:none;
+    text-align:center;
+    padding-top: 120px;
+  }
+  .rune{
+    width: 46px; height: 46px;
+    margin: 0 auto 22px;
+    border: 2px solid #4a4631;
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+  }
+  @keyframes spin{ to{ transform: rotate(360deg); } }
+  #loading-text{
+    font-family: var(--font-display);
+    font-size: 15px;
+    letter-spacing: 0.03em;
+    color: #c8bc98;
+  }
+
+  /* ---------- error ---------- */
+  #error{
+    display:none;
+    max-width: 480px;
+    text-align:center;
+    padding-top: 100px;
+  }
+  #error .glyph{ font-family: var(--font-deco); font-size: 42px; color: var(--blood-bright); margin-bottom: 18px; }
+  #error p{ font-size: 17px; color: #d8c9a3; line-height:1.6; }
+
+  /* ---------- character sheet ---------- */
+  #sheet-wrap{ display:none; width:100%; max-width: 560px; }
+  #actions-top{
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom: 18px;
+  }
+  #actions-top .link-btn{
+    background:none; border:none; color:#9a8f70; font-family: var(--font-body);
+    font-style: italic; font-size: 14px; cursor:pointer; padding:6px 0;
+  }
+  #actions-top .link-btn:hover{ color: var(--gold-bright); }
+
+  #card{
+    position: relative;
+    background:
+      radial-gradient(ellipse at 15% 10%, rgba(255,255,255,0.35), transparent 40%),
+      radial-gradient(ellipse at 90% 85%, rgba(0,0,0,0.06), transparent 45%),
+      var(--parchment);
+    color: var(--parchment-text);
+    border-radius: 4px;
+    padding: 34px 30px 30px;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.45), 0 0 0 1px #3a3524;
+    opacity:0;
+    transform: scale(0.96);
+  }
+  #card.reveal{ animation: cardIn 0.6s cubic-bezier(.2,.8,.2,1) forwards; }
+  @keyframes cardIn{ to{ opacity:1; transform: scale(1); } }
+
+  #card::before{
+    content:"";
+    position:absolute; inset: 10px;
+    border: 1px solid #b8975f;
+    border-radius: 2px;
+    pointer-events:none;
+  }
+  .corner{ position:absolute; width:22px; height:22px; border: 2px solid var(--gold); opacity:0.75; }
+  .corner.tl{ top:4px; left:4px; border-right:none; border-bottom:none; }
+  .corner.tr{ top:4px; right:4px; border-left:none; border-bottom:none; }
+  .corner.bl{ bottom:4px; left:4px; border-right:none; border-top:none; }
+  .corner.br{ bottom:4px; right:4px; border-left:none; border-top:none; }
+
+  #card-inner{ position:relative; }
+
+  .header-row{
+    display:flex;
+    gap:18px;
+    align-items:center;
+    margin-bottom: 20px;
+  }
+  #avatar-frame{
+    width: 78px; height:78px;
+    border-radius:50%;
+    border: 3px solid var(--gold);
+    box-shadow: 0 0 0 1px #8f7017, 0 3px 8px rgba(0,0,0,0.25);
+    overflow:hidden;
+    flex-shrink:0;
+    background: var(--parchment-2);
+    display:flex; align-items:center; justify-content:center;
+  }
+  #avatar-frame img{ width:100%; height:100%; object-fit:cover; display:block; }
+  #avatar-fallback{ font-family: var(--font-deco); font-size: 26px; color: var(--parchment-muted); }
+
+  .name-block{ flex:1; min-width:0; }
+  #char-name{
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 700;
+    margin:0;
+    color: var(--parchment-text);
+    line-height:1.15;
+    overflow-wrap:anywhere;
+  }
+  #char-class{
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 15px;
+    color: var(--blood);
+    margin: 3px 0 0;
+  }
+  #char-handle{
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--parchment-muted);
+    margin: 4px 0 0;
+  }
+
+  #level-badge{
+    flex-shrink:0;
+    text-align:center;
+    border: 1px solid var(--gold);
+    border-radius: 4px;
+    padding: 7px 12px;
+    background: rgba(201,162,39,0.08);
+  }
+  #level-badge .lv-label{ font-family: var(--font-body); font-size:10px; letter-spacing:0.08em; color: var(--parchment-muted); display:block; }
+  #level-badge .lv-num{ font-family: var(--font-mono); font-weight:700; font-size:22px; color: var(--blood); display:block; line-height:1.1; }
+
+  #xp-row{ margin: 4px 0 24px; }
+  #xp-labels{ display:flex; justify-content:space-between; font-family: var(--font-mono); font-size:11px; color: var(--parchment-muted); margin-bottom:5px; }
+  #xp-track{ height: 9px; border-radius: 5px; background: #d8c8a0; border: 1px solid #b8975f; overflow:hidden; }
+  #xp-fill{ height:100%; background: linear-gradient(90deg, #8f7017, var(--gold-bright)); border-radius: 5px; width:0%; transition: width 1s ease 0.4s; }
+
+  .flavor{
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 14px;
+    color: var(--parchment-muted);
+    line-height:1.6;
+    margin: 0 0 22px;
+    padding-left: 12px;
+    border-left: 2px solid var(--gold);
+  }
+
+  .section-label{
+    font-family: var(--font-display);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    color: var(--blood);
+    margin: 0 0 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #c9b688;
+  }
+
+  #stats-grid{
+    display:grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+  .stat-box{
+    text-align:center;
+    background: rgba(0,0,0,0.03);
+    border: 1px solid #c9b688;
+    border-radius: 3px;
+    padding: 9px 2px 8px;
+  }
+  .stat-box .k{ font-family: var(--font-mono); font-weight:700; font-size:12px; color: var(--forest); letter-spacing:0.04em; }
+  .stat-box .v{ font-family: var(--font-mono); font-weight:700; font-size:19px; color: var(--parchment-text); margin-top:3px; }
+
+  #scars-list{ list-style:none; margin:0 0 24px; padding:0; display:flex; flex-direction:column; gap:8px; }
+  #scars-list li{
+    display:flex; justify-content:space-between; gap:10px;
+    font-family: var(--font-body); font-size: 14px;
+    padding: 8px 10px;
+    background: rgba(122,46,46,0.05);
+    border-left: 2px solid var(--blood);
+    border-radius: 2px;
+  }
+  #scars-list .scar-name{ font-weight:600; color: var(--blood); }
+  #scars-list .scar-desc{ color: var(--parchment-muted); text-align:right; font-size:12.5px; }
+
+  #equip-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; }
+  #equip-list li{
+    display:flex; justify-content:space-between; align-items:baseline; gap:10px;
+    font-family: var(--font-body); font-size: 14px;
+    padding: 8px 10px;
+    background: rgba(58,77,56,0.06);
+    border-left: 2px solid var(--forest);
+    border-radius: 2px;
+  }
+  #equip-list .eq-name{ font-weight:600; color: var(--forest); overflow-wrap:anywhere; }
+  #equip-list .eq-meta{ font-family: var(--font-mono); font-size: 12px; color: var(--parchment-muted); white-space:nowrap; }
+
+  .card-footer{
+    margin-top: 24px;
+    padding-top: 14px;
+    border-top: 1px solid #c9b688;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--parchment-muted);
+    text-align:center;
+  }
+
+  #actions-bottom{
+    display:flex; gap:12px; justify-content:center; margin-top: 26px; flex-wrap:wrap;
+  }
+
+  footer.note{
+    margin-top: 40px;
+    font-size: 12.5px;
+    color: #6b6549;
+    text-align:center;
+    max-width: 480px;
+    line-height:1.6;
+  }
+
+  @media (max-width: 480px){
+    #stats-grid{ grid-template-columns: repeat(5, 1fr); gap:5px; }
+    .stat-box{ padding: 7px 1px 6px; }
+    .stat-box .v{ font-size:15px; }
+    #card{ padding: 26px 18px 22px; }
+    #char-name{ font-size:20px; }
+  }
+</style>
+</head>
+<body>
+
+  <section id="intro">
+    <p class="eyebrow-title">A tool of the forge</p>
+    <h1>Commit Character</h1>
+    <p class="tag">Every push, pull request and 2am hotfix has been writing your legend.<br>Enter a GitHub username and let's read it back.</p>
+    <div class="rule"></div>
+    <form id="intro-form">
+      <input id="username-input" type="text" placeholder="octocat" autocomplete="off" spellcheck="false">
+      <button class="btn" type="submit">Forge my character</button>
+    </form>
+    <p id="intro-hint">Works on any public GitHub profile. Nothing is stored — the character is built fresh, in your browser.</p>
+  </section>
+
+  <section id="loading">
+    <div class="rune"></div>
+    <p id="loading-text">Rolling for initiative...</p>
+  </section>
+
+  <section id="error">
+    <p class="glyph">✦</p>
+    <p id="error-text"></p>
+    <div style="margin-top:22px;"><button class="btn secondary" id="error-retry">Try another name</button></div>
+  </section>
+
+  <section id="sheet-wrap">
+    <div id="actions-top">
+      <button class="link-btn" id="back-btn">&larr; forge another</button>
+      <span id="fetched-note" style="font-family:var(--font-mono); font-size:11px; color:#776c53;"></span>
+    </div>
+
+    <div id="card">
+      <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+      <div id="card-inner">
+
+        <div class="header-row">
+          <div id="avatar-frame"><span id="avatar-fallback"></span></div>
+          <div class="name-block">
+            <p id="char-name"></p>
+            <p id="char-class"></p>
+            <p id="char-handle"></p>
+          </div>
+          <div id="level-badge">
+            <span class="lv-label">level</span>
+            <span class="lv-num" id="char-level"></span>
+          </div>
+        </div>
+
+        <div id="xp-row">
+          <div id="xp-labels"><span id="xp-current"></span><span id="xp-next"></span></div>
+          <div id="xp-track"><div id="xp-fill"></div></div>
+        </div>
+
+        <p class="flavor" id="char-flavor"></p>
+
+        <p class="section-label">Attributes</p>
+        <div id="stats-grid"></div>
+
+        <p class="section-label">Battle scars</p>
+        <ul id="scars-list"></ul>
+
+        <p class="section-label" style="margin-top:24px;">Equipped artifacts</p>
+        <ul id="equip-list"></ul>
+
+        <div id="card-footer-text" class="card-footer"></div>
+      </div>
+    </div>
+
+    <div id="actions-bottom">
+      <button class="btn" id="download-btn">Download character card</button>
+      <button class="btn secondary" id="share-btn">Share on X</button>
+    </div>
+  </section>
+
+  <footer class="note" id="footer-note" style="display:none;">Stats are drawn from GitHub's public profile, repository and recent-activity data — a rough legend, not a performance review.</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  var introEl = document.getElementById('intro');
+  var loadingEl = document.getElementById('loading');
+  var errorEl = document.getElementById('error');
+  var sheetEl = document.getElementById('sheet-wrap');
+  var footerNote = document.getElementById('footer-note');
+  var form = document.getElementById('intro-form');
+  var input = document.getElementById('username-input');
+  var loadingTextEl = document.getElementById('loading-text');
+
+  var LOADING_LINES = [
+    "Rolling for initiative...",
+    "Consulting the commit oracle...",
+    "Counting scars from old merge conflicts...",
+    "Measuring the weight of your inventory...",
+    "Translating pushes into prophecy...",
+    "Appraising your equipped artifacts..."
+  ];
+  var loadingTimer = null;
+
+  function showScreen(name){
+    introEl.style.display = name === 'intro' ? 'block' : 'none';
+    loadingEl.style.display = name === 'loading' ? 'block' : 'none';
+    errorEl.style.display = name === 'error' ? 'block' : 'none';
+    sheetEl.style.display = name === 'sheet' ? 'block' : 'none';
+    footerNote.style.display = name === 'sheet' ? 'block' : 'none';
+  }
+
+  function startLoadingCycle(){
+    var i = 0;
+    loadingTextEl.textContent = LOADING_LINES[0];
+    loadingTimer = setInterval(function(){
+      i = (i + 1) % LOADING_LINES.length;
+      loadingTextEl.textContent = LOADING_LINES[i];
+    }, 1400);
+  }
+  function stopLoadingCycle(){ if(loadingTimer){ clearInterval(loadingTimer); loadingTimer = null; } }
+
+  var LANG_CLASS = {
+    "JavaScript": ["Chaos Weaver", "One who bends async spirits to their will and occasionally summons a callback demon."],
+    "TypeScript": ["Rune Architect", "Binds wild magic into typed contracts before it can escape at runtime."],
+    "Python": ["Serpent Sage", "Speaks in indentation and knows a spell for nearly everything."],
+    "Java": ["Iron Paladin", "Heavily armored in boilerplate, unshaken by a thousand interfaces."],
+    "C#": ["Arcane Engineer", "Channels magic through a very orderly, very well-typed circuit."],
+    "C++": ["Forge Master", "Hand-forges every weapon and occasionally forgets to sheathe a pointer."],
+    "C": ["Ancient Smith", "Works closest to the raw metal of the machine, no armor between."],
+    "Go": ["Windrunner", "Travels light, moves fast, and never quite trusts a shared goroutine."],
+    "Rust": ["Ironclad Alchemist", "Refuses to let a single memory leak escape the laboratory."],
+    "Ruby": ["Gem Conjurer", "Casts elegant, expressive spells that read almost like verse."],
+    "PHP": ["Elephant Shaman", "Ancient magic, endlessly underestimated, still quietly runs half the realm."],
+    "Swift": ["Sky Duelist", "Quick, precise strikes built for the orchard-shaped kingdoms."],
+    "Kotlin": ["Isle Warden", "Guards the tower with fewer words and none of the ceremony."],
+    "HTML": ["Scroll Scribe", "Lays the bones of every structure others build magic upon."],
+    "CSS": ["Illusion Weaver", "Makes the plainest scroll look like it was carved by royal hands."],
+    "Shell": ["Terminal Ranger", "Navigates the wilderness with nothing but a pipe and a prayer."],
+    "Vue": ["Tidepool Druid", "Shapes reactive currents into calm, readable templates."],
+    "Dart": ["Fletcher of Flutters", "Fires the same arrow true across every platform's sky."],
+    "Objective-C": ["Old Bracketkeeper", "Remembers the square-bracket rites the newer orders forgot."],
+    "Lua": ["Pocket Sorcerer", "Small spellbook, surprisingly load-bearing for the whole dungeon."],
+    "Scala": ["Twin-Path Mystic", "Walks the line between functional prophecy and object ritual."],
+    "R": ["Statistics Oracle", "Reads the future in scatterplots and trusts the p-value."],
+    "Haskell": ["Pure Monk", "Vows never to let a side effect slip past the gate unannounced."],
+    "Elixir": ["Phoenix Shaman", "Lets processes die and rise again without losing composure."],
+    "Julia": ["Numeric Druid", "Grows fast, loose, powerful magic for matrices and beyond."],
+    "Solidity": ["Ledger Warden", "Carves immutable law into a chain nobody can quietly rewrite."]
+  };
+  var DEFAULT_CLASS = ["Wandering Coder", "Hasn't settled on one discipline yet — and that's its own kind of power."];
+
+  function pad2(n){ return n < 10 ? "0"+n : ""+n; }
+  function fmtNum(n){ return Math.round(n).toLocaleString('en-US'); }
+  function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
+
+  function daysBetween(a, b){ return Math.floor((b - a) / 86400000); }
+
+  function ghHeaders(){
+    return { "Accept": "application/vnd.github+json" };
+  }
+
+  function fetchJSON(url){
+    return fetch(url, { headers: ghHeaders() }).then(function(res){
+      if(!res.ok){
+        var err = new Error("HTTP " + res.status);
+        err.status = res.status;
+        throw err;
+      }
+      return res.json();
+    });
+  }
+
+  function gatherData(username){
+    var userP = fetchJSON("https://api.github.com/users/" + encodeURIComponent(username));
+    var reposP = fetchJSON("https://api.github.com/users/" + encodeURIComponent(username) + "/repos?per_page=100&sort=pushed");
+    var eventsP = fetch("https://api.github.com/users/" + encodeURIComponent(username) + "/events/public?per_page=100", { headers: ghHeaders() })
+      .then(function(res){ return res.ok ? res.json() : []; })
+      .catch(function(){ return []; });
+
+    return userP.then(function(user){
+      return Promise.all([reposP, eventsP]).then(function(rest){
+        return { user: user, repos: rest[0] || [], events: rest[1] || [] };
+      });
+    });
+  }
+
+  function computeCharacter(data, username){
+    var user = data.user;
+    var repos = Array.isArray(data.repos) ? data.repos.filter(function(r){ return !r.fork; }) : [];
+    var allReposIncludingForks = Array.isArray(data.repos) ? data.repos : [];
+    var events = Array.isArray(data.events) ? data.events : [];
+
+    var totalStars = repos.reduce(function(s, r){ return s + (r.stargazers_count || 0); }, 0);
+    var totalForks = repos.reduce(function(s, r){ return s + (r.forks_count || 0); }, 0);
+    var totalRepos = user.public_repos || allReposIncludingForks.length || 0;
+    var followers = user.followers || 0;
+
+    var langCounts = {};
+    repos.forEach(function(r){
+      if(r.language){ langCounts[r.language] = (langCounts[r.language] || 0) + 1; }
+    });
+    var langDiversity = Object.keys(langCounts).length;
+    var topLang = null, topLangCount = 0;
+    Object.keys(langCounts).forEach(function(l){
+      if(langCounts[l] > topLangCount){ topLang = l; topLangCount = langCounts[l]; }
+    });
+
+    var createdAt = user.created_at ? new Date(user.created_at) : new Date();
+    var accountAgeDays = daysBetween(createdAt, new Date());
+    var accountAgeYears = accountAgeDays / 365;
+
+    var pushEvents = events.filter(function(e){ return e.type === "PushEvent"; });
+    var pushEventCount = pushEvents.length;
+
+    var fixCount = 0;
+    var dateSet = {};
+    pushEvents.forEach(function(e){
+      var day = (e.created_at || "").slice(0,10);
+      if(day) dateSet[day] = true;
+      var commits = (e.payload && e.payload.commits) || [];
+      commits.forEach(function(c){
+        if(c.message && /\b(fix|bug|patch|hotfix)\b/i.test(c.message)){ fixCount++; }
+      });
+    });
+    var activeDays = Object.keys(dateSet).sort();
+    var longestStreak = 0, curStreak = 0, prevDay = null;
+    activeDays.forEach(function(d){
+      var dt = new Date(d + "T00:00:00Z");
+      if(prevDay && daysBetween(prevDay, dt) === 1){ curStreak++; } else { curStreak = 1; }
+      longestStreak = Math.max(longestStreak, curStreak);
+      prevDay = dt;
+    });
+
+    var xp = totalStars * 10 + totalForks * 5 + followers * 5 + totalRepos * 15 +
+             pushEventCount * 3 + Math.floor(accountAgeDays / 30) * 8;
+    xp = Math.max(xp, 5);
+
+    function xpForLevel(n){ return Math.pow(8 * (n - 1), 2); }
+    var level = 1;
+    while(xpForLevel(level + 1) <= xp && level < 99){ level++; }
+    var curFloor = xpForLevel(level);
+    var nextCeil = xpForLevel(level + 1);
+    var progress = nextCeil > curFloor ? clamp((xp - curFloor) / (nextCeil - curFloor), 0, 1) : 1;
+
+    var stats = {
+      STR: clamp(3 + Math.floor(Math.log2(totalStars + 1)) * 2, 1, 20),
+      DEX: clamp(3 + Math.floor(pushEventCount / 5), 1, 20),
+      CON: clamp(3 + Math.floor(accountAgeDays / 180), 1, 20),
+      INT: clamp(3 + langDiversity * 2, 1, 20),
+      CHA: clamp(3 + Math.floor(Math.log2(followers + 1)) * 2, 1, 20)
+    };
+
+    var cls = (topLang && LANG_CLASS[topLang]) ? LANG_CLASS[topLang] : DEFAULT_CLASS;
+
+    var scars = [];
+    if(fixCount >= 3) scars.push({ name: "Bug slayer", desc: fixCount + " fixes in the last 90 days" });
+    if(totalRepos >= 100) scars.push({ name: "Century club", desc: totalRepos + " repositories founded" });
+    if(pushEventCount >= 80) scars.push({ name: "Relentless forger", desc: pushEventCount + " pushes in the last 90 days" });
+    if(accountAgeYears >= 5) scars.push({ name: "Veteran", desc: Math.floor(accountAgeYears) + " years in the realm" });
+    if(totalStars >= 100) scars.push({ name: "Rising star", desc: fmtNum(totalStars) + " stars earned" });
+    if(longestStreak >= 5) scars.push({ name: "Streak walker", desc: longestStreak + "-day unbroken push streak" });
+    if(langDiversity >= 6) scars.push({ name: "Polyglot", desc: langDiversity + " tongues spoken fluently" });
+    if(followers >= 100) scars.push({ name: "Beloved of the realm", desc: fmtNum(followers) + " followers" });
+    if(totalForks >= 50) scars.push({ name: "Widely copied", desc: fmtNum(totalForks) + " forks in the wild" });
+    if(scars.length === 0) scars.push({ name: "Fresh recruit", desc: "the legend is just beginning" });
+    scars = scars.slice(0, 5);
+
+    var equip = repos.slice().sort(function(a,b){ return (b.stargazers_count||0) - (a.stargazers_count||0); }).slice(0, 3);
+
+    return {
+      username: username,
+      displayName: user.name || user.login || username,
+      avatarUrl: user.avatar_url,
+      profileUrl: user.html_url || ("https://github.com/" + username),
+      className: cls[0],
+      classFlavor: cls[1],
+      level: level,
+      xp: xp,
+      xpFloor: curFloor,
+      xpCeil: nextCeil,
+      progress: progress,
+      stats: stats,
+      scars: scars,
+      equip: equip,
+      totalRepos: totalRepos,
+      totalStars: totalStars,
+      followers: followers,
+      accountAgeYears: accountAgeYears,
+      createdYear: createdAt.getFullYear()
+    };
+  }
+
+  function renderCharacter(ch){
+    document.getElementById('char-name').textContent = ch.displayName;
+    document.getElementById('char-class').textContent = ch.className;
+    document.getElementById('char-handle').textContent = "@" + ch.username;
+    document.getElementById('char-level').textContent = ch.level;
+    document.getElementById('char-flavor').textContent = "\u201C" + ch.classFlavor + "\u201D";
+    document.getElementById('xp-current').textContent = fmtNum(ch.xp) + " xp";
+    document.getElementById('xp-next').textContent = "next: " + fmtNum(ch.xpCeil) + " xp";
+    document.getElementById('card-footer-text').textContent =
+      "Forged from " + fmtNum(ch.totalStars) + " stars across " + fmtNum(ch.totalRepos) +
+      " repos \u00b7 in the realm since " + ch.createdYear;
+
+    var avatarFrame = document.getElementById('avatar-frame');
+    var fallback = document.getElementById('avatar-fallback');
+    avatarFrame.querySelectorAll('img').forEach(function(n){ n.remove(); });
+    if(ch.avatarUrl){
+      var img = document.createElement('img');
+      img.crossOrigin = "anonymous";
+      img.src = ch.avatarUrl;
+      img.alt = ch.displayName + " avatar";
+      img.onerror = function(){ img.remove(); fallback.style.display = 'block'; };
+      fallback.style.display = 'none';
+      avatarFrame.appendChild(img);
+    } else {
+      fallback.textContent = (ch.displayName || "?").charAt(0).toUpperCase();
+      fallback.style.display = 'block';
+    }
+
+    var statsGrid = document.getElementById('stats-grid');
+    statsGrid.innerHTML = "";
+    ["STR","DEX","CON","INT","CHA"].forEach(function(k){
+      var box = document.createElement('div');
+      box.className = 'stat-box';
+      box.innerHTML = '<div class="k">' + k + '</div><div class="v">' + ch.stats[k] + '</div>';
+      statsGrid.appendChild(box);
+    });
+
+    var scarsList = document.getElementById('scars-list');
+    scarsList.innerHTML = "";
+    ch.scars.forEach(function(s){
+      var li = document.createElement('li');
+      li.innerHTML = '<span class="scar-name">' + s.name + '</span><span class="scar-desc">' + s.desc + '</span>';
+      scarsList.appendChild(li);
+    });
+
+    var equipList = document.getElementById('equip-list');
+    equipList.innerHTML = "";
+    if(ch.equip.length === 0){
+      var li0 = document.createElement('li');
+      li0.innerHTML = '<span class="eq-name">No artifacts forged yet</span>';
+      equipList.appendChild(li0);
+    } else {
+      ch.equip.forEach(function(r){
+        var li = document.createElement('li');
+        var meta = (r.stargazers_count || 0) + " \u2605" + (r.language ? " \u00b7 " + r.language : "");
+        li.innerHTML = '<span class="eq-name">' + r.name + '</span><span class="eq-meta">' + meta + '</span>';
+        equipList.appendChild(li);
+      });
+    }
+
+    var fill = document.getElementById('xp-fill');
+    fill.style.width = '0%';
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){ fill.style.width = Math.round(ch.progress * 100) + '%'; });
+    });
+
+    document.getElementById('fetched-note').textContent = "github.com/" + ch.username;
+
+    var card = document.getElementById('card');
+    card.classList.remove('reveal');
+    void card.offsetWidth;
+    card.classList.add('reveal');
+
+    window.__currentCharacter = ch;
+  }
+
+  function errorMessage(err, username){
+    console.error("Commit Character fetch error:", err);
+    if(err && err.status === 404){
+      return "No adventurer by the name \u201C" + username + "\u201D walks these lands. Check the spelling and try again.";
+    }
+    if(err && (err.status === 403 || err.status === 429)){
+      return "The GitHub oracle needs rest \u2014 too many seekers have asked this hour (or read the archives from this address recently). Wait a bit and try again.";
+    }
+    if(err && (err.name === "TypeError" || /failed to fetch|networkerror|load failed/i.test(err.message || ""))){
+      return "Couldn't reach the GitHub archives from here (" + (err.message || err.name) + "). If you're viewing this inside a preview panel, download the file and open it directly in a browser tab. If you're already in a plain browser tab, check your connection, any ad blocker or VPN, or a corporate/network firewall that may be blocking api.github.com.";
+    }
+    return "Something in the archives went wrong while reading that scroll (" + (err && err.message ? err.message : "unknown cause") + "). Try again in a moment.";
+  }
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    var raw = input.value.trim().replace(/^@/, '');
+    if(!raw){ input.focus(); return; }
+    showScreen('loading');
+    startLoadingCycle();
+    gatherData(raw).then(function(data){
+      stopLoadingCycle();
+      var ch = computeCharacter(data, raw);
+      renderCharacter(ch);
+      showScreen('sheet');
+    }).catch(function(err){
+      stopLoadingCycle();
+      document.getElementById('error-text').textContent = errorMessage(err, raw);
+      showScreen('error');
+    });
+  });
+
+  document.getElementById('error-retry').addEventListener('click', function(){
+    showScreen('intro');
+    input.focus();
+  });
+  document.getElementById('back-btn').addEventListener('click', function(){
+    showScreen('intro');
+    input.focus();
+    input.select();
+  });
+
+  document.getElementById('download-btn').addEventListener('click', function(){
+    var btn = this;
+    var original = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "Inscribing...";
+    var card = document.getElementById('card');
+
+    var fontsReady = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
+    fontsReady.then(function(){
+      return new Promise(function(resolve){ setTimeout(resolve, 60); });
+    }).then(function(){
+      var captureScale = Math.max(3, (window.devicePixelRatio || 1) * 2);
+      return htmlToImage.toPng(card, {
+        pixelRatio: captureScale,
+        backgroundColor: '#efe4c8',
+        cacheBust: true
+      });
+    }).then(function(dataUrl){
+      var link = document.createElement('a');
+      var ch = window.__currentCharacter;
+      link.download = "commit-character-" + (ch ? ch.username : "sheet") + ".png";
+      link.href = dataUrl;
+      link.click();
+      btn.disabled = false;
+      btn.textContent = original;
+    }).catch(function(err){
+      console.error("Download failed:", err);
+      btn.disabled = false;
+      btn.textContent = original;
+      alert("Couldn't capture the card as an image. Try a screenshot instead.");
+    });
+  });
+
+  document.getElementById('share-btn').addEventListener('click', function(){
+    var ch = window.__currentCharacter;
+    if(!ch) return;
+    var text = "I'm a level " + ch.level + " " + ch.className + " according to Commit Character \u2014 " +
+      fmtNum(ch.xp) + " XP forged from my GitHub history. github.com/" + ch.username;
+    var url = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(text);
+    window.open(url, '_blank', 'noopener,noreferrer');
+  });
+
+  showScreen('intro');
+  input.focus();
+})();
+</script>
+</body>
+</html>
